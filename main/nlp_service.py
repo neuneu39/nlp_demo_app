@@ -1,26 +1,25 @@
 import numpy as np
 import pickle
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 
 class NlpService:
 
-    def __init__(self, answer):
-        self.answer = answer
+    def __init__(self):
         # インデックスと文字で辞書を作成
         self.char_indices = {}
         self.indices_char = {}
         self.max_length_x = 128
 
 
-        with open('models/kana_chars.pickle', mode='rb') as f:
-            chars_list = pickle.load(f)
+        with open('main/models/kana_chars.pickle', mode='rb') as f:
+            self.chars_list = pickle.load(f)
 
-        for i, char in enumerate(chars_list):
+        for i, char in enumerate(self.chars_list):
             self.char_indices[char] = i
-        for i, char in enumerate(chars_list):
+        for i, char in enumerate(self.chars_list):
             self.indices_char[i] = char
 
-        self.n_char = len(chars_list)
+        self.n_char = len(self.chars_list)
 
 # 文章をone-hot表現に変換する関数
     def sentence_to_vector(self, sentence):
@@ -30,8 +29,11 @@ class NlpService:
         return vector
 
     def create_response_answer(self, message, beta=5):
-        encoder_model = load_model('models/encoder_model.h5')
-        decoder_model = load_model('models/decoder_model.h5')
+        encoder_model = load_model('main/models/encoder_model.h5')
+        decoder_model = load_model('main/models/decoder_model.h5')
+
+        if self._is_invalid(message):
+            return "ひらがなか、カタカナをつかってください。"
         vec = self.sentence_to_vector(message)  # 文字列をone-hot表現に変換
         state_value = encoder_model.predict(vec)
         y_decoder = np.zeros((1, 1, self.n_char))  # decoderの出力を格納する配列
@@ -54,4 +56,10 @@ class NlpService:
         return respond_sentence
         # return "こんにちは"
 
+    def _is_invalid(self, message):
+        is_invalid = False
+        for char in message:
+            if char not in self.chars_list:
+                is_invalid = True
+        return is_invalid
 

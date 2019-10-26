@@ -9,5 +9,5 @@ def post():
         return jsonify('format is not correct')
     answer = json['User_Answer']
 
-    response_answer = NlpService(answer)
-    return jsonify(response_answer.create_response_answer())
+    response_answer = NlpService()
+    return jsonify(response_answer.create_response_answer(answer))
